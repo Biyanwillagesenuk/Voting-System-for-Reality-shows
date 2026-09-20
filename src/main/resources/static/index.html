@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reality Show Voting System</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['"Playfair Display"', 'serif'],
+          },
+          colors: {
+            theme: { bg: '#f2f2f2', dark: '#000000', accent: '#09090b', footerText: '#F5F4E8' }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Icons & Animation -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+
+  <style>
+    body { overflow-x: hidden; transition: background-color 0.4s ease, color 0.4s ease; }
+    ::selection { background: currentColor; color: background; }
+    .barcode { background: repeating-linear-gradient(to right, currentColor, currentColor 2px, transparent 2px, transparent 4px, currentColor 4px, currentColor 5px, transparent 5px, transparent 8px); }
+    .waveform-bg { background: repeating-linear-gradient(to right, currentColor 0%, currentColor 1px, transparent 1px, transparent 4px); opacity: 0.1; }
+    .mask-fade { -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%); mask-image: linear-gradient(to bottom, black 80%, transparent 100%); }
+    .animate-spin-slow { animation: spin 20s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .char { display: inline-block; }
+
+    /* Theme Variations */
+    body.theme-light { background-color: #f2f2f2; color: #000000; }
+    body.theme-light nav { background-color: rgba(242, 242, 242, 0.9); border-color: #e4e4e7; }
+    body.theme-light .card-bg { background-color: #e4e4e7; }
+
+    body.theme-dark { background-color: #050609; color: #f2f2f2; }
+    body.theme-dark nav { background-color: rgba(5, 6, 9, 0.9); border-color: #27272a; }
+    body.theme-dark .card-bg { background-color: #121316; }
+
+    body.theme-white { background-color: #ffffff; color: #09090b; }
+    body.theme-white nav { background-color: rgba(255, 255, 255, 0.9); border-color: #f4f4f5; }
+    body.theme-white .card-bg { background-color: #f4f4f5; }
+  </style>
+</head>
+<body class="antialiased theme-light" id="site-body">
+
+<!-- NAVIGATION -->
+<nav class="fixed w-full z-50 backdrop-blur-md h-24 flex items-center justify-between px-8 border-b transition-colors duration-300">
+  <div class="flex items-center gap-4">
+    <img src="https://i.ibb.co/zTyKTFdf/LOGO-CODE-COMPANY-NEGRO.png" alt="Logo" class="h-8 dark:invert">
+    <span class="font-semibold text-sm tracking-widest uppercase">Voting-System</span>
+  </div>
+
+  <div class="hidden md:flex items-center gap-10 text-sm font-medium tracking-wide">
+    <a href="#shows" class="relative hover:opacity-75 transition-opacity">Discover</a>
+    <a href="contestants.html" class="relative hover:opacity-75 transition-opacity">Contestants</a>
+    <a href="#shows" class="relative hover:opacity-75 transition-opacity">Live Voting</a>
+  </div>
+
+  <div class="flex items-center gap-6">
+    <!-- THEME SWITCHER TOGGLE -->
+    <div class="flex items-center border rounded-full p-1 text-xs font-bold uppercase tracking-wider border-current/20">
+      <button onclick="setTheme('theme-light')" id="btn-light" class="px-3 py-1 rounded-full transition-all">Light</button>
+      <button onclick="setTheme('theme-dark')" id="btn-dark" class="px-3 py-1 rounded-full transition-all">Dark</button>
+    </div>
+
+    <a href="management.html" class="text-sm font-medium hover:opacity-75 flex items-center gap-2 transition-opacity">
+      <i data-lucide="log-in" class="w-4 h-4"></i> Admin Login
+    </a>
+    <button class="bg-current text-background px-6 py-2.5 text-sm font-medium rounded-full hover:opacity-90 transition-opacity" style="background-color: var(--tw-prose-invert-body, black); color: white;">
+      Cast Vote
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="relative min-h-screen pt-24 flex flex-col items-center justify-center overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none z-0 opacity-20">
+    <div class="absolute w-[1px] h-full bg-current left-[10%] top-0"></div>
+    <div class="absolute w-[1px] h-full bg-current left-[75%] top-0"></div>
+    <div class="absolute w-full h-[1px] bg-current top-[30%] left-0"></div>
+  </div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
+    <div class="pulse-circle border border-current opacity-20 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style="width: 300px; height: 300px;"></div>
+    <div class="pulse-circle border border-current opacity-20 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style="width: 400px; height: 400px;"></div>
+    <div class="pulse-circle border border-current opacity-20 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style="width: 510px; height: 510px;"></div>
+  </div>
+  <div class="relative z-20 text-center flex flex-col items-center mix-blend-difference text-white mt-10">
+    <h1 class="text-6xl lg:text-8xl font-bold leading-[0.9] tracking-tighter uppercase flex flex-col">
+      <span>Reality Show</span>
+      <span>Voting</span>
+      <span class="text-transparent" style="-webkit-text-stroke: 2px white;">System</span>
+    </h1>
+  </div>
+
+  <!-- HERO IMAGE FROM UPLOADED TEMPLATE[cite: 4] -->
+  <div class="relative z-30 mt-[-100px] pointer-events-none">
+    <img src="https://i.ibb.co/JjKCSHbj/05e836e2-4cb8-47c5-ba65-4573f065a656-Photoroom.png" alt="Host" class="h-[600px] object-contain mask-fade">
+    <div class="absolute top-10 -right-20 bg-black text-white text-xs font-bold py-2 px-6 rounded-full rotate-12 flex items-center gap-2 shadow-xl pointer-events-auto hover:scale-105 transition-transform cursor-pointer">
+      <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> LIVE NOW
+    </div>
+    <div class="absolute bottom-10 -left-20 w-32 h-12 barcode pointer-events-none"></div>
+  </div>
+</section>
+
+<!-- SERVICES BANNER -->
+<section class="w-full bg-zinc-950 text-white border-y border-zinc-800">
+  <div class="grid grid-cols-2 md:grid-cols-5 divide-x divide-zinc-800">
+    <a href="management.html" class="p-8 flex flex-col items-center justify-center gap-3 hover:bg-zinc-900 transition-colors cursor-pointer">
+      <div class="w-3 h-3 bg-white rounded-full mb-2"></div>
+      <span class="text-xs tracking-widest font-medium uppercase">Management</span>
+    </a>
+    <a href="contestants.html" class="p-8 flex flex-col items-center justify-center gap-3 hover:bg-zinc-900 transition-colors cursor-pointer">
+      <i data-lucide="users" class="w-6 h-6 mb-2"></i>
+      <span class="text-xs tracking-widest font-medium uppercase">Contestants</span>
+    </a>
+    <div class="p-8 flex flex-col items-center justify-center gap-3 hover:bg-zinc-900 transition-colors cursor-pointer">
+      <i data-lucide="mic-2" class="w-6 h-6 mb-2"></i>
+      <span class="text-xs tracking-widest font-medium uppercase">Live Shows</span>
+    </div>
+    <div class="p-8 flex flex-col items-center justify-center gap-3 hover:bg-zinc-900 transition-colors cursor-pointer">
+      <i data-lucide="sliders-vertical" class="w-6 h-6 mb-2"></i>
+      <span class="text-xs tracking-widest font-medium uppercase">Analytics</span>
+    </div>
+    <div class="p-8 flex flex-col items-center justify-center gap-3 hover:bg-zinc-900 transition-colors cursor-pointer md:col-span-1 col-span-2">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg" alt="Partner" class="h-6 brightness-0 invert opacity-50">
+    </div>
+  </div>
+</section>
+
+<!-- STATS & RELEASES -->
+<section id="shows" class="max-w-7xl mx-auto px-8 py-24 grid grid-cols-1 lg:grid-cols-12 gap-12 relative z-10">
+  <div class="lg:col-span-3 flex flex-col gap-10">
+    <div class="flex items-start gap-4">
+      <i data-lucide="activity" class="w-6 h-6 mt-1"></i>
+      <div>
+        <h3 class="text-4xl font-light tracking-tighter">+120</h3>
+        <p class="text-xs font-semibold tracking-widest uppercase mt-1 opacity-60">Live Shows</p>
+      </div>
+    </div>
+    <div class="flex items-start gap-4">
+      <i data-lucide="users-2" class="w-6 h-6 mt-1"></i>
+      <div>
+        <h3 class="text-4xl font-light tracking-tighter">+35</h3>
+        <p class="text-xs font-semibold tracking-widest uppercase mt-1 opacity-60">Contestants</p>
+      </div>
+    </div>
+  </div>
+  <div id="contestants" class="lg:col-span-6 grid grid-cols-2 gap-4">
+    <div class="group relative overflow-hidden bg-black aspect-[4/5]">
+      <img src="https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=600&q=80" alt="Show 1" class="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
+      <div class="absolute bottom-4 left-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <p class="text-xs font-bold tracking-widest uppercase">Season Finale</p>
+      </div>
+    </div>
+    <div class="group relative overflow-hidden bg-black aspect-[4/5] mt-12">
+      <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&q=80" alt="Show 2" class="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
+      <div class="absolute bottom-4 left-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <p class="text-xs font-bold tracking-widest uppercase">The Auditions</p>
+      </div>
+    </div>
+  </div>
+  <div class="lg:col-span-3 relative h-full flex flex-col justify-center min-h-[400px] p-8 overflow-hidden card-bg transition-colors duration-300">
+    <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80" alt="Mic" class="absolute inset-0 w-full h-full object-cover mix-blend-multiply grayscale opacity-20 z-0">
+    <div class="relative z-10">
+      <i data-lucide="quote" class="w-8 h-8 rotate-180 mb-6"></i>
+      <h4 class="text-2xl font-light leading-snug">
+        "Every vote is a pulse. We ensure the heartbeat of the show is authentic."
+      </h4>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="relative bg-black text-white pt-40 pb-20 mt-40 w-full flex flex-col items-center justify-end overflow-hidden min-h-[80vh]">
+  <img src="https://i.ibb.co/hFwh2wY3/image-Photoroom.png" alt="Creator" class="absolute -top-[300px] right-[10%] lg:right-[20%] h-[700px] object-contain z-0 pointer-events-none grayscale opacity-80">
+  <div class="absolute top-0 left-0 w-full z-10 leading-none">
+    <svg viewBox="0 0 1200 120" class="w-full h-auto block" preserveAspectRatio="none">
+      <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor" class="text-background transition-colors duration-300"></path>
+    </svg>
+  </div>
+  <div class="relative z-20 w-full px-8 flex flex-col items-center">
+    <div class="w-full overflow-hidden text-center io-target">
+      <h2 class="giant-text font-serif italic whitespace-nowrap text-[16vw] leading-none text-[#F5F4E8] pointer-events-none opacity-0">
+        The Voting System
+      </h2>
+    </div>
+  </div>
+</footer>
+
+<!-- Scripts -->
+<script>
+  lucide.createIcons();
+
+  // Theme Switcher Logic
+  function setTheme(themeName) {
+    const body = document.getElementById('site-body');
+    body.className = `antialiased ${themeName}`;
+    localStorage.setItem('preferred-theme', themeName);
+
+    ['theme-light', 'theme-dark', 'theme-white'].forEach(t => {
+      const btn = document.getElementById(t.replace('theme-', 'btn-'));
+      if(btn) {
+        if(t === themeName) {
+          btn.style.backgroundColor = 'currentColor';
+          btn.style.color = themeName === 'theme-dark' ? '#000' : '#fff';
+        } else {
+          btn.style.backgroundColor = 'transparent';
+          btn.style.color = 'inherit';
+        }
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('preferred-theme') || 'theme-light';
+    setTheme(savedTheme);
+
+    // Hero Pulsing Circles
+    anime({
+      targets: '.pulse-circle', scale: [0.95, 1.1], opacity: [0.3, 0],
+      easing: 'easeInOutSine', duration: 2000, delay: anime.stagger(300), loop: true
+    });
+
+    // Giant Text Animation Setup
+    const textWrapper = document.querySelector('.giant-text');
+    if(textWrapper) textWrapper.innerHTML = textWrapper.textContent.replace(/([^\x00-\x80]|\w)/g, "<span class='char'>$&</span>");
+
+    // Scroll Reveal Observer
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && entry.target.querySelector('.giant-text')) {
+          const gt = entry.target.querySelector('.giant-text');
+          gt.style.opacity = 1;
+          anime({ targets: '.giant-text .char', translateY: [80, 0], opacity: [0, 1], easing: 'easeOutExpo', duration: 1200, delay: anime.stagger(50) });
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { root: null, rootMargin: '0px', threshold: 0.1 });
+    document.querySelectorAll('.io-target').forEach(el => observer.observe(el));
+  });
+</script>
+</body>
+</html>
