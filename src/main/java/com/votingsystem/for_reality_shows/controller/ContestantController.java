@@ -1,7 +1,7 @@
 package com.votingsystem.for_reality_shows.controller;
 
 import com.votingsystem.for_reality_shows.model.Contestant;
-import com.votingsystem.for_reality_shows.repository.ContestantRepository;
+import com.votingsystem.for_reality_shows.service.ContestantService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -11,52 +11,50 @@ import java.util.List;
 @RequestMapping("/api/contestants")
 public class ContestantController {
 
-    private final ContestantRepository contestantRepository;
+    private final ContestantService contestantService;
 
-    public ContestantController(ContestantRepository contestantRepository) {
-        this.contestantRepository = contestantRepository;
+    public ContestantController(ContestantService contestantService) {
+        this.contestantService = contestantService;
     }
 
     @PostMapping
     public ResponseEntity<Contestant> createContestant(@RequestBody Contestant contestant) {
-        return ResponseEntity.ok(contestantRepository.save(contestant));
+        return ResponseEntity.ok(contestantService.createContestant(contestant));
     }
 
     @GetMapping
     public ResponseEntity<List<Contestant>> getAllContestants() {
-        return ResponseEntity.ok(contestantRepository.findAll());
+        return ResponseEntity.ok(contestantService.getAllContestants());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Contestant> getContestantById(@PathVariable Long id) {
-        return contestantRepository.findById(id)
+        return contestantService.getContestantById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/show/{showId}")
     public ResponseEntity<List<Contestant>> getContestantsByShow(@PathVariable Long showId) {
-        return ResponseEntity.ok(contestantRepository.findByShowId(showId));
+        return ResponseEntity.ok(contestantService.getContestantsByShow(showId));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Contestant> updateContestant(@PathVariable Long id, @RequestBody Contestant updatedContestant) {
-        return contestantRepository.findById(id).map(contestant -> {
-            contestant.setName(updatedContestant.getName());
-            contestant.setAge(updatedContestant.getAge());
-            contestant.setBio(updatedContestant.getBio());
-            contestant.setPhotoUrl(updatedContestant.getPhotoUrl());
-            contestant.setShowId(updatedContestant.getShowId());
-            return ResponseEntity.ok(contestantRepository.save(contestant));
-        }).orElseGet(() -> ResponseEntity.<Contestant>notFound().build()); // Fixed here
+        try {
+            Contestant contestant = contestantService.updateContestant(id, updatedContestant);
+            return ResponseEntity.ok(contestant);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteContestant(@PathVariable Long id) {
-        if (!contestantRepository.existsById(id)) {
+        boolean deleted = contestantService.deleteContestant(id);
+        if (!deleted) {
             return ResponseEntity.notFound().build();
         }
-        contestantRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }

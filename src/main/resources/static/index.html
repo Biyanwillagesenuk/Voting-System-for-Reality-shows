@@ -54,6 +54,15 @@
     body.theme-white { background-color: #ffffff; color: #09090b; }
     body.theme-white nav { background-color: rgba(255, 255, 255, 0.9); border-color: #f4f4f5; }
     body.theme-white .card-bg { background-color: #f4f4f5; }
+
+    /* Logo Theme Adaptation */
+    body.theme-light #nav-logo,
+    body.theme-white #nav-logo {
+      filter: none;
+    }
+    body.theme-dark #nav-logo {
+      filter: invert(100%);
+    }
   </style>
 </head>
 <body class="antialiased theme-light" id="site-body">
@@ -61,14 +70,15 @@
 <!-- NAVIGATION -->
 <nav class="fixed w-full z-50 backdrop-blur-md h-24 flex items-center justify-between px-8 border-b transition-colors duration-300">
   <div class="flex items-center gap-4">
-    <img src="https://i.ibb.co/zTyKTFdf/LOGO-CODE-COMPANY-NEGRO.png" alt="Logo" class="h-8 dark:invert">
+    <!-- Added ID and transition classes for the logo filter update -->
+    <img src="https://i.ibb.co/zTyKTFdf/LOGO-CODE-COMPANY-NEGRO.png" alt="Logo" id="nav-logo" class="h-8 transition-all duration-300">
     <span class="font-semibold text-sm tracking-widest uppercase">Voting-System</span>
   </div>
 
-  <div class="hidden md:flex items-center gap-10 text-sm font-medium tracking-wide">
-    <a href="#shows" class="relative hover:opacity-75 transition-opacity">Discover</a>
+  <div class="hidden md:flex items-center gap-10 text-lg font-medium tracking-wide">
+    <a href="discover.html" class="relative hover:opacity-75 transition-opacity">Discover</a>
     <a href="contestants.html" class="relative hover:opacity-75 transition-opacity">Contestants</a>
-    <a href="#shows" class="relative hover:opacity-75 transition-opacity">Live Voting</a>
+    <a href="#" onclick="handleLiveVotingAccess(event)" class="relative hover:opacity-75 transition-opacity">Live Voting</a>
   </div>
 
   <div class="flex items-center gap-6">
@@ -78,12 +88,22 @@
       <button onclick="setTheme('theme-dark')" id="btn-dark" class="px-3 py-1 rounded-full transition-all">Dark</button>
     </div>
 
-    <a href="management.html" class="text-sm font-medium hover:opacity-75 flex items-center gap-2 transition-opacity">
-      <i data-lucide="log-in" class="w-4 h-4"></i> Admin Login
+    <!-- DEFAULT LOGIN BUTTON (Visible when logged out) -->
+    <a href="user-portal.html" id="nav-login-btn" class="text-base font-medium hover:opacity-75 flex items-center gap-2 transition-opacity">
+      <i data-lucide="log-in" class="w-4 h-4"></i> Login
     </a>
-    <button class="bg-current text-background px-6 py-2.5 text-sm font-medium rounded-full hover:opacity-90 transition-opacity" style="background-color: var(--tw-prose-invert-body, black); color: white;">
-      Cast Vote
-    </button>
+
+    <!-- PROFILE ICON & LOGOUT (Hidden by default, visible when logged in) -->
+    <div id="nav-profile-section" class="hidden items-center gap-4">
+      <!-- Clickable Name linked to account.html -->
+      <a href="account.html" class="flex items-center gap-2 text-base font-medium hover:opacity-75 transition-opacity cursor-pointer">
+        <i data-lucide="user" class="w-4 h-4"></i>
+        <span id="nav-user-name" class="capitalize">Profile</span>
+      </a>
+      <button onclick="handleLogout()" class="text-xs font-bold uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors">
+        Logout
+      </button>
+    </div>
   </div>
 </nav>
 
@@ -107,7 +127,7 @@
     </h1>
   </div>
 
-  <!-- HERO IMAGE FROM UPLOADED TEMPLATE[cite: 4] -->
+  <!-- HERO IMAGE -->
   <div class="relative z-30 mt-[-100px] pointer-events-none">
     <img src="https://i.ibb.co/JjKCSHbj/05e836e2-4cb8-47c5-ba65-4573f065a656-Photoroom.png" alt="Host" class="h-[600px] object-contain mask-fade">
     <div class="absolute top-10 -right-20 bg-black text-white text-xs font-bold py-2 px-6 rounded-full rotate-12 flex items-center gap-2 shadow-xl pointer-events-auto hover:scale-105 transition-transform cursor-pointer">
@@ -120,7 +140,7 @@
 <!-- SERVICES BANNER -->
 <section class="w-full bg-zinc-950 text-white border-y border-zinc-800">
   <div class="grid grid-cols-2 md:grid-cols-5 divide-x divide-zinc-800">
-    <a href="management.html" class="p-8 flex flex-col items-center justify-center gap-3 hover:bg-zinc-900 transition-colors cursor-pointer">
+    <a href="" class="p-8 flex flex-col items-center justify-center gap-3 hover:bg-zinc-900 transition-colors cursor-pointer">
       <div class="w-3 h-3 bg-white rounded-full mb-2"></div>
       <span class="text-xs tracking-widest font-medium uppercase">Management</span>
     </a>
@@ -132,10 +152,10 @@
       <i data-lucide="mic-2" class="w-6 h-6 mb-2"></i>
       <span class="text-xs tracking-widest font-medium uppercase">Live Shows</span>
     </div>
-    <div class="p-8 flex flex-col items-center justify-center gap-3 hover:bg-zinc-900 transition-colors cursor-pointer">
+    <a href="/support" class="p-8 flex flex-col items-center justify-center gap-3 hover:bg-zinc-900 transition-colors cursor-pointer block text-current">
       <i data-lucide="sliders-vertical" class="w-6 h-6 mb-2"></i>
-      <span class="text-xs tracking-widest font-medium uppercase">Analytics</span>
-    </div>
+      <span class="text-xs tracking-widest font-medium uppercase">Support Center</span>
+    </a>
     <div class="p-8 flex flex-col items-center justify-center gap-3 hover:bg-zinc-900 transition-colors cursor-pointer md:col-span-1 col-span-2">
       <img src="https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg" alt="Partner" class="h-6 brightness-0 invert opacity-50">
     </div>
@@ -226,33 +246,114 @@
     });
   }
 
+  const Auth = {
+    get(key) {
+      const v = sessionStorage.getItem(key) ?? localStorage.getItem(key);
+      return (v === 'undefined' || v === 'null') ? null : v;
+    },
+    save(user, role) {
+      const { passwordHash, password, ...safeUser } = user;
+      const entries = {
+        isLoggedIn: 'true',
+        userId: String(user.id),
+        userName: user.name || user.email || 'User',
+        userEmail: user.email || '',
+        userRole: role,
+        userProfile: JSON.stringify(safeUser)
+      };
+      Object.entries(entries).forEach(([k, v]) => {
+        sessionStorage.setItem(k, v);
+        localStorage.setItem(k, v);
+      });
+    },
+    clear() {
+      ['isLoggedIn', 'userId', 'userName', 'userEmail', 'userRole', 'userProfile', 'isAdminAuthenticated']
+              .forEach(k => { sessionStorage.removeItem(k); localStorage.removeItem(k); });
+    },
+    get isLoggedIn() { return this.get('isLoggedIn') === 'true' && !!this.get('userId'); },
+    get userId()     { return this.get('userId'); },
+    get userName()   { return this.get('userName') || 'User'; },
+    get userEmail()  { return this.get('userEmail') || ''; },
+    get role()       { return (this.get('userRole') || '').toUpperCase().replace('ROLE_', ''); },
+    get profile()    { try { return JSON.parse(this.get('userProfile')); } catch { return null; } },
+
+    // --> REPLACE YOUR LOGOUT METHOD WITH THIS ENTIRE BLOCK:
+    logout(redirect = 'user-portal.html') {
+      this.clear();
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.replace(redirect);
+    }
+  };
+
+  // Handle User Logout
+  function handleLogout() {
+    sessionStorage.clear();
+    window.location.href = 'user-portal.html';
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initialize Theme
     const savedTheme = localStorage.getItem('preferred-theme') || 'theme-light';
     setTheme(savedTheme);
 
-    // Hero Pulsing Circles
-    anime({
-      targets: '.pulse-circle', scale: [0.95, 1.1], opacity: [0.3, 0],
-      easing: 'easeInOutSine', duration: 2000, delay: anime.stagger(300), loop: true
-    });
+    // 2. Initialize Navigation Profile State
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+    const loginBtn = document.getElementById('nav-login-btn');
+    const profileSection = document.getElementById('nav-profile-section');
+    const userNameSpan = document.getElementById('nav-user-name');
 
-    // Giant Text Animation Setup
-    const textWrapper = document.querySelector('.giant-text');
-    if(textWrapper) textWrapper.innerHTML = textWrapper.textContent.replace(/([^\x00-\x80]|\w)/g, "<span class='char'>$&</span>");
+    if (isLoggedIn && loginBtn && profileSection) {
+      loginBtn.style.display = 'none';
+      profileSection.style.display = 'flex';
+      profileSection.classList.remove('hidden');
+      userNameSpan.textContent = sessionStorage.getItem('userName') || 'User';
+    }
 
-    // Scroll Reveal Observer
-    const observer = new IntersectionObserver((entries, obs) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting && entry.target.querySelector('.giant-text')) {
-          const gt = entry.target.querySelector('.giant-text');
-          gt.style.opacity = 1;
-          anime({ targets: '.giant-text .char', translateY: [80, 0], opacity: [0, 1], easing: 'easeOutExpo', duration: 1200, delay: anime.stagger(50) });
-          obs.unobserve(entry.target);
-        }
+    // 3. Initialize Animations
+    if (typeof anime !== 'undefined') {
+      anime({
+        targets: '.pulse-circle', scale: [0.95, 1.1], opacity: [0.3, 0],
+        easing: 'easeInOutSine', duration: 2000, delay: anime.stagger(300), loop: true
       });
-    }, { root: null, rootMargin: '0px', threshold: 0.1 });
-    document.querySelectorAll('.io-target').forEach(el => observer.observe(el));
+
+      const textWrapper = document.querySelector('.giant-text');
+      if(textWrapper) textWrapper.innerHTML = textWrapper.textContent.replace(/([^\x00-\x80]|\w)/g, "<span class='char'>$&</span>");
+
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && entry.target.querySelector('.giant-text')) {
+            const gt = entry.target.querySelector('.giant-text');
+            gt.style.opacity = 1;
+            anime({ targets: '.giant-text .char', translateY: [80, 0], opacity: [0, 1], easing: 'easeOutExpo', duration: 1200, delay: anime.stagger(50) });
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { root: null, rootMargin: '0px', threshold: 0.1 });
+
+      document.querySelectorAll('.io-target').forEach(el => observer.observe(el));
+    }
   });
+
+  // Handle Role-Based Access for Live Voting
+  function handleLiveVotingAccess(event) {
+    event.preventDefault();
+
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+    const role = sessionStorage.getItem('userRole');
+
+    if (!isLoggedIn) {
+      alert("Please log in to access Live Voting.");
+      window.location.href = 'user-portal.html';
+      return;
+    }
+
+    if (role === 'ADMIN' || role === 'CONTESTANT') {
+      alert("Access Denied: Admins and Contestants are not permitted to cast votes.");
+    } else if (role === 'VOTER' || role === 'JUDGE') {
+      window.location.href = '/dashboard';
+    }
+  }
 </script>
 </body>
 </html>

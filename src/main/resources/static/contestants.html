@@ -17,42 +17,57 @@
         ::selection { background: currentColor; color: background; }
         .mask-fade-bottom { -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%); mask-image: linear-gradient(to bottom, black 40%, transparent 100%); }
 
-        /* Theme Styles */
+        body.theme-light #nav-logo, body.theme-white #nav-logo { filter: none; }
+        body.theme-dark #nav-logo { filter: invert(100%); }
+
         body.theme-light { background-color: #f2f2f2; color: #000000; }
         body.theme-light nav { background-color: rgba(242, 242, 242, 0.9); border-color: #e4e4e7; }
+        body.theme-light .contestant-card { background-color: rgba(255, 255, 255, 0.9); border-color: #e4e4e7; }
 
         body.theme-dark { background-color: #050609; color: #f2f2f2; }
         body.theme-dark nav { background-color: rgba(5, 6, 9, 0.9); border-color: #27272a; }
+        body.theme-dark .contestant-card { background-color: rgba(18, 19, 22, 0.9); border-color: #27272a; }
 
         body.theme-white { background-color: #ffffff; color: #09090b; }
         body.theme-white nav { background-color: rgba(255, 255, 255, 0.9); border-color: #f4f4f5; }
+        body.theme-white .contestant-card { background-color: rgba(249, 249, 251, 0.9); border-color: #f4f4f5; }
+
+        .btn-primary { background-color: #000; color: #fff; }
+        body.theme-dark .btn-primary { background-color: #f2f2f2; color: #000; }
+        .btn-primary:hover { opacity: .9; }
     </style>
 </head>
-<body class="antialiased theme-light" id="site-body">
+<body class="antialiased theme-dark" id="site-body">
 
 <nav class="fixed w-full z-50 backdrop-blur-md h-24 flex items-center justify-between px-8 border-b transition-colors duration-300">
     <div class="flex items-center gap-4">
-        <img src="https://i.ibb.co/zTyKTFdf/LOGO-CODE-COMPANY-NEGRO.png" alt="Logo" class="h-8 dark:invert">
-        <span class="font-semibold text-sm tracking-widest uppercase">VoteSystem</span>
+        <img src="https://i.ibb.co/zTyKTFdf/LOGO-CODE-COMPANY-NEGRO.png" alt="Logo" id="nav-logo" class="h-8 transition-all duration-300">
+        <span class="font-semibold text-sm tracking-widest uppercase">VOTING-SYSTEM</span>
     </div>
 
-    <div class="hidden md:flex items-center gap-10 text-sm font-medium tracking-wide">
-        <a href="index.html" class="relative hover:opacity-75 transition-opacity">Discover</a>
+    <div class="hidden md:flex items-center gap-10 text-lg font-medium tracking-wide">
+        <a href="discover.html" class="relative hover:opacity-75 transition-opacity">Discover</a>
         <a href="#" class="relative border-b-2 border-current pb-1">Contestants</a>
-        <a href="index.html" class="relative hover:opacity-75 transition-opacity">Live Voting</a>
+        <a href="leaderboard.html" class="relative hover:opacity-75 transition-opacity">Live Voting</a>
     </div>
 
     <div class="flex items-center gap-6">
-        <!-- THEME SWITCHER -->
-        <div class="flex items-center border rounded-full p-1 text-xs font-bold uppercase tracking-wider border-current/20">
-            <button onclick="setTheme('theme-light')" id="btn-light" class="px-3 py-1 rounded-full transition-all">Light</button>
-            <button onclick="setTheme('theme-dark')" id="btn-dark" class="px-3 py-1 rounded-full transition-all">Dark</button>
+        <div class="flex items-center border rounded-full px-4 py-1.5 gap-4 border-current/20 cursor-pointer hover:border-current/50 transition-colors" onclick="toggleTheme()" id="theme-toggle-btn">
+            <span class="text-[10px] font-bold uppercase tracking-widest" id="theme-label">Dark</span>
+            <div class="w-8 h-4 rounded-full bg-current/20 relative flex items-center px-0.5">
+                <div class="w-3 h-3 rounded-full bg-current absolute transition-transform duration-300" id="theme-knob"></div>
+            </div>
         </div>
 
-        <a href="login.html" class="text-sm font-medium hover:opacity-75 flex items-center gap-2 transition-opacity">
-            <i data-lucide="log-in" class="w-4 h-4"></i> Admin Login
+        <div id="auth-nav-container">
+            <a href="user-portal.html" class="text-sm font-medium hover:opacity-75 flex items-center gap-2 transition-opacity">
+                <i data-lucide="log-in" class="w-4 h-4"></i>Login
+            </a>
+        </div>
+
+        <a href="index.html" class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity">
+            Home <i data-lucide="arrow-right" class="w-5 h-5"></i>
         </a>
-        <button class="bg-current text-background px-6 py-2.5 text-sm font-medium rounded-full hover:opacity-90 transition-opacity" style="background-color: var(--tw-prose-invert-body, black); color: white;">Cast Vote</button>
     </div>
 </nav>
 
@@ -66,7 +81,7 @@
             <span class="text-xs font-bold uppercase tracking-widest opacity-60">Live Roster</span>
         </div>
         <h1 class="text-5xl md:text-7xl font-bold tracking-tighter uppercase mb-6">Contestants Registry</h1>
-        <p class="max-w-xl mx-auto text-sm md:text-base font-medium opacity-80">Review active specimens added from the management console. Cast your vote securely.</p>
+        <p class="max-w-xl mx-auto text-sm md:text-base font-medium opacity-80">Review active contestants added from the management console. Cast your vote securely.</p>
     </div>
 </section>
 
@@ -78,92 +93,176 @@
         <div class="font-mono text-xs opacity-60" id="roster-count">FETCHING REGISTRY...</div>
     </div>
 
-    <!-- Dynamic Grid container -->
-    <div id="contestants-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <!-- Dynamically populated from backend database -->
-    </div>
+    <div id="contestants-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
 </section>
 
-<footer class="bg-black text-zinc-500 py-12 text-center text-xs uppercase tracking-widest">
-    <p>&copy; 2026 Moshain D:) Designed for absolute voting.</p>
+<footer class="bg-black text-zinc-500 py-12 flex flex-col items-center gap-3 text-center">
+    <p class="text-xs uppercase tracking-widest">&copy; 2026 Reality Show Voting System &bull; Secure Voting Hub</p>
+    <p class="text-[10px] font-mono opacity-50 uppercase tracking-widest">System Connection: Active &bull; Seeduwa, Sri Lanka</p>
 </footer>
 
 <script>
-    lucide.createIcons();
-    const API_BASE_URL = 'http://localhost:8080/api';
+    const API_ROOT = 'http://localhost:8080/api';
 
-    // Theme Switcher Logic
-    function setTheme(themeName) {
-        const body = document.getElementById('site-body');
-        body.className = `antialiased ${themeName}`;
-        localStorage.setItem('preferred-theme', themeName);
+    const Auth = {
+        get(key) {
+            const v = sessionStorage.getItem(key) ?? localStorage.getItem(key);
+            return (v === 'undefined' || v === 'null') ? null : v;
+        },
+        save(user, role) {
+            const { passwordHash, password, ...safeUser } = user;
+            const entries = {
+                isLoggedIn: 'true',
+                userId: String(user.id),
+                userName: user.name || user.email || 'User',
+                userEmail: user.email || '',
+                userRole: role,
+                userProfile: JSON.stringify(safeUser)
+            };
+            Object.entries(entries).forEach(([k, v]) => {
+                sessionStorage.setItem(k, v);
+                localStorage.setItem(k, v);
+            });
+        },
+        clear() {
+            ['isLoggedIn', 'userId', 'userName', 'userEmail', 'userRole', 'userProfile', 'isAdminAuthenticated']
+                .forEach(k => { sessionStorage.removeItem(k); localStorage.removeItem(k); });
+        },
+        get isLoggedIn() { return this.get('isLoggedIn') === 'true' && !!this.get('userId'); },
+        get userId()     { return this.get('userId'); },
+        get userName()   { return this.get('userName') || 'User'; },
+        get userEmail()  { return this.get('userEmail') || ''; },
+        get role()       { return (this.get('userRole') || '').toUpperCase().replace('ROLE_', ''); },
+        get profile()    { try { return JSON.parse(this.get('userProfile')); } catch { return null; } },
+        logout(redirect = 'user-portal.html') {
+            this.clear();
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.replace(redirect);
+        }
+    };
 
-        ['theme-light', 'theme-dark', 'theme-white'].forEach(t => {
-            const btn = document.getElementById(t.replace('theme-', 'btn-'));
-            if(btn) {
-                if(t === themeName) {
-                    btn.style.backgroundColor = 'currentColor';
-                    btn.style.color = themeName === 'theme-dark' ? '#000' : '#fff';
-                } else {
-                    btn.style.backgroundColor = 'transparent';
-                    btn.style.color = 'inherit';
-                }
-            }
-        });
+    function esc(value) {
+        return String(value ?? '').replace(/[&<>"']/g, c =>
+            ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
-    async function loadPublicContestants() {
+    function updateHeaderAuthUI() {
+        const authContainer = document.getElementById('auth-nav-container');
+        if (!authContainer) return;
+
+        const isLoggedIn = Auth.isLoggedIn || sessionStorage.getItem('isLoggedIn') === 'true' || localStorage.getItem('isLoggedIn') === 'true';
+        const userName = Auth.userName || sessionStorage.getItem('userName') || localStorage.getItem('userName') || 'User';
+        const userRole = Auth.role || sessionStorage.getItem('userRole') || localStorage.getItem('userRole') || 'VOTER';
+
+        if (isLoggedIn) {
+            authContainer.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <a href="account.html" class="flex items-center gap-2 text-xs font-mono uppercase tracking-widest px-4 py-2 border border-current/20 rounded-full hover:bg-current/10 transition-all">
+                        <i data-lucide="user" class="w-4 h-4"></i> ${esc(userName)} (${esc(userRole)})
+                    </a>
+                    <button onclick="handleContestantsLogout()" class="text-xs font-mono uppercase tracking-widest text-red-500 hover:opacity-100 transition-opacity cursor-pointer">Logout</button>
+                </div>`;
+        } else {
+            authContainer.innerHTML = `
+                <a href="user-portal.html" class="text-sm font-medium hover:opacity-75 flex items-center gap-2 transition-opacity">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>Login
+                </a>`;
+        }
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function handleContestantsLogout() {
+        Auth.clear();
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.replace('user-portal.html');
+    }
+
+    function handleCastVoteClick(contestantId, showId) {
+        if (!Auth.isLoggedIn) {
+            alert("Please log in to cast your vote.");
+            window.location.href = 'user-portal.html';
+            return;
+        }
+        if (Auth.role === 'ADMIN' || Auth.role === 'CONTESTANT') {
+            alert("Administrators and contestants cannot cast votes or scores.");
+            return;
+        }
+        const params = new URLSearchParams({ contestantId });
+        if (showId) params.set('showId', showId);
+        window.location.href = `leaderboard.html?${params.toString()}`;
+    }
+
+    function setTheme(themeName) {
+        document.getElementById('site-body').className = `antialiased ${themeName}`;
+        localStorage.setItem('preferred-theme', themeName);
+        const label = document.getElementById('theme-label');
+        if (label) label.textContent = themeName === 'theme-light' ? 'Light' : (themeName === 'theme-dark' ? 'Dark' : 'White');
+    }
+
+    function toggleTheme() {
+        const current = localStorage.getItem('preferred-theme') || 'theme-dark';
+        setTheme(current === 'theme-dark' ? 'theme-light' : current === 'theme-light' ? 'theme-white' : 'theme-dark');
+    }
+
+    async function loadContestants() {
         const grid = document.getElementById('contestants-grid');
-        const countLabel = document.getElementById('roster-count');
+        const counter = document.getElementById('roster-count');
 
         try {
-            const response = await fetch(`${API_BASE_URL}/contestants`);
-            const contestants = await response.json();
-
-            grid.innerHTML = '';
-            countLabel.innerText = `DISPLAYING: 0${contestants.length} SPECIMENS`;
+            const res = await fetch(`${API_ROOT}/contestants`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const contestants = await res.json();
+            counter.textContent = `${contestants.length} ACTIVE REGISTERED`;
 
             if (contestants.length === 0) {
-                grid.innerHTML = '<p class="text-xs font-mono opacity-60 uppercase col-span-3 py-12 text-center">No active contestants found in the database.</p>';
+                grid.innerHTML = `<p class="col-span-3 text-center py-12 opacity-60 font-mono uppercase">No contestants registered yet.</p>`;
                 return;
             }
 
-            contestants.forEach((cont) => {
-                const photo = cont.photoUrl ? cont.photoUrl : 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&q=80';
-                const refNum = String(cont.id).padStart(3, '0');
-
-                grid.innerHTML += `
-                        <div class="group cursor-pointer">
-                            <div class="relative overflow-hidden bg-black aspect-[3/4] mb-4">
-                                <img src="${photo}" alt="${cont.name}" class="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105">
-                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-black/20">
-                                    <button class="bg-white text-black px-8 py-3 text-sm font-bold uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-2xl">Cast Vote</button>
-                                </div>
-                                <div class="absolute top-4 right-4 bg-white text-black text-[10px] font-mono px-3 py-1 font-bold">REF-${refNum}</div>
-                            </div>
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-2xl font-bold tracking-tight uppercase group-hover:opacity-60 transition-colors">${cont.name}</h3>
-                                    <p class="text-xs font-mono opacity-60 mt-1 uppercase">Bio: ${cont.bio} (Age: ${cont.age})</p>
-                                </div>
-                                <i data-lucide="arrow-up-right" class="w-6 h-6 opacity-40 group-hover:opacity-100 transition-colors transform group-hover:translate-x-1 group-hover:-translate-y-1"></i>
+            grid.innerHTML = contestants.map(c => {
+                const name = c.name || c.contestantName || 'Unnamed';
+                const photo = c.photoUrl
+                    ? `<img src="${esc(c.photoUrl)}" alt="${esc(name)}" class="w-20 h-20 rounded-full object-cover border border-current/20" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'w-20 h-20 rounded-full bg-current/10 border border-current/20'}))">`
+                    : `<div class="w-20 h-20 rounded-full bg-current/10 border border-current/20 flex items-center justify-center"><i data-lucide="user" class="w-8 h-8 opacity-40"></i></div>`;
+                return `
+                <div class="contestant-card p-6 border rounded-2xl shadow-xl flex flex-col justify-between transition-all">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[10px] font-mono uppercase px-3 py-1 border border-current/20 rounded-full bg-current/5">Show ID: ${esc(c.showId ?? 'N/A')}</span>
+                            <span class="font-mono text-xs opacity-60">ID: #${esc(c.id)}</span>
+                        </div>
+                        <div class="flex items-center gap-4 mb-4">
+                            ${photo}
+                            <div>
+                                <h3 class="text-2xl font-bold uppercase tracking-tight">${esc(name)}</h3>
+                                ${c.age ? `<p class="text-xs font-mono opacity-60">Age ${esc(c.age)}</p>` : ''}
                             </div>
                         </div>
-                    `;
-            });
+                        <p class="text-sm opacity-70 mb-6">${esc(c.bio || 'No biography provided.')}</p>
+                    </div>
+                    <button data-id="${esc(c.id)}" data-show="${esc(c.showId ?? '')}"
+                            onclick="handleCastVoteClick(this.dataset.id, this.dataset.show)"
+                            class="w-full btn-primary text-xs font-bold uppercase tracking-widest py-3 transition-opacity cursor-pointer shadow-md">
+                        Cast Vote / Score
+                    </button>
+                </div>`;
+            }).join('');
             lucide.createIcons();
-        } catch (error) {
-            console.error("Backend offline:", error);
-            grid.innerHTML = '<p class="text-xs font-mono text-red-500 uppercase col-span-3 text-center py-12">Database connection failed.</p>';
-            countLabel.innerText = 'STATUS: OFFLINE';
+        } catch (err) {
+            console.error(err);
+            counter.textContent = 'CONNECTION FAILED';
+            grid.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500 font-mono uppercase">Could not load contestants (${esc(err.message)}). Ensure Spring Boot is running.</p>`;
         }
     }
 
-    window.onload = () => {
-        const savedTheme = localStorage.getItem('preferred-theme') || 'theme-light';
-        setTheme(savedTheme);
-        loadPublicContestants();
-    };
+    document.addEventListener('DOMContentLoaded', () => {
+        setTheme(localStorage.getItem('preferred-theme') || 'theme-dark');
+        updateHeaderAuthUI();
+        loadContestants();
+        lucide.createIcons();
+    });
 </script>
 </body>
 </html>

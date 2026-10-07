@@ -1,7 +1,7 @@
 package com.votingsystem.for_reality_shows.controller;
 
 import com.votingsystem.for_reality_shows.model.Show;
-import com.votingsystem.for_reality_shows.repository.ShowRepository;
+import com.votingsystem.for_reality_shows.service.ShowService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -11,46 +11,45 @@ import java.util.List;
 @RequestMapping("/api/shows")
 public class ShowController {
 
-    private final ShowRepository showRepository;
+    private final ShowService showService;
 
-    public ShowController(ShowRepository showRepository) {
-        this.showRepository = showRepository;
+    public ShowController(ShowService showService) {
+        this.showService = showService;
     }
 
     @PostMapping
     public ResponseEntity<Show> createShow(@RequestBody Show show) {
-        return ResponseEntity.ok(showRepository.save(show));
+        return ResponseEntity.ok(showService.createShow(show));
     }
 
     @GetMapping
     public ResponseEntity<List<Show>> getAllShows() {
-        return ResponseEntity.ok(showRepository.findAll());
+        return ResponseEntity.ok(showService.getAllShows());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Show> getShowById(@PathVariable Long id) {
-        return showRepository.findById(id)
+        return showService.getShowById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Show> updateShow(@PathVariable Long id, @RequestBody Show updatedShow) {
-        return showRepository.findById(id).map(show -> {
-            show.setTitle(updatedShow.getTitle());
-            show.setDescription(updatedShow.getDescription());
-            show.setStartDate(updatedShow.getStartDate());
-            show.setStatus(updatedShow.getStatus());
-            return ResponseEntity.ok(showRepository.save(show));
-        }).orElseGet(() -> ResponseEntity.<Show>notFound().build()); // Fixed here
+        try {
+            Show show = showService.updateShow(id, updatedShow);
+            return ResponseEntity.ok(show);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteShow(@PathVariable Long id) {
-        if (!showRepository.existsById(id)) {
+        boolean deleted = showService.deleteShow(id);
+        if (!deleted) {
             return ResponseEntity.notFound().build();
         }
-        showRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -18,19 +18,68 @@ public class Contestant {
     @Column(name = "show_id")
     private Long showId;
 
-    // This creates the actual Foreign Key constraint in the database
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "show_id", insertable = false, updatable = false)
     private Show show;
 
     public Contestant() {}
 
-    public Contestant(String name, int age, String bio, String photoUrl, Long showId) {
-        this.name = name;
-        this.age = age;
-        this.bio = bio;
-        this.photoUrl = photoUrl;
-        this.showId = showId;
+    // Private constructor used by the Builder
+    private Contestant(Builder builder) {
+        this.id = builder.id;
+        this.name = builder.name;
+        this.age = builder.age;
+        this.bio = builder.bio;
+        this.photoUrl = builder.photoUrl;
+        this.showId = builder.showId;
+    }
+
+    // --- BUILDER PATTERN (Creational) ---
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Long id;
+        private String name;
+        private int age;
+        private String bio;
+        private String photoUrl;
+        private Long showId;
+
+        public Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder age(int age) {
+            this.age = age;
+            return this;
+        }
+
+        public Builder bio(String bio) {
+            this.bio = bio;
+            return this;
+        }
+
+        public Builder photoUrl(String photoUrl) {
+            this.photoUrl = photoUrl;
+            return this;
+        }
+
+        public Builder showId(Long showId) {
+            this.showId = showId;
+            return this;
+        }
+
+        public Contestant build() {
+            return new Contestant(this);
+        }
     }
 
     // Getters and setters

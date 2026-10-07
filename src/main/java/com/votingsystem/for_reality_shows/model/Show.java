@@ -1,7 +1,5 @@
 package com.votingsystem.for_reality_shows.model;
 
-
-
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -22,11 +20,55 @@ public class Show {
 
     public Show() {}
 
-    public Show(String title, String description, LocalDate startDate, ShowStatus status) {
-        this.title = title;
-        this.description = description;
-        this.startDate = startDate;
-        this.status = status;
+    // Private constructor used by the Builder
+    private Show(Builder builder) {
+        this.id = builder.id;
+        this.title = builder.title;
+        this.description = builder.description;
+        this.startDate = builder.startDate;
+        this.status = builder.status;
+    }
+
+    // --- BUILDER PATTERN (Creational) ---
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Long id;
+        private String title;
+        private String description;
+        private LocalDate startDate;
+        private ShowStatus status;
+
+        public Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public Builder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public Builder startDate(LocalDate startDate) {
+            this.startDate = startDate;
+            return this;
+        }
+
+        public Builder status(ShowStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        public Show build() {
+            return new Show(this);
+        }
     }
 
     // Getters and setters
