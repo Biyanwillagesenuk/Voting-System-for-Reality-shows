@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Online Voting Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f6fa; color: #333; }
+        .box { background: #fff; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .row-form { display: inline-block; margin: 0; }
+        .input-inline { width: 80px; padding: 4px; display: inline-block; margin-right: 5px; }
+        select, input[type="number"] { padding: 6px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #dcdde1; padding: 10px; text-align: left; }
+        th { background: #2f3640; color: white; }
+        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; font-weight: bold; }
+        .alert-s { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-d { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+
+<h2>Online Voting Management Board</h2>
+
+<!-- Operational Alerts Display -->
+<div th:if="${successMessage}" class="alert alert-s" th:text="${successMessage}"></div>
+<div th:if="${errorMessage}" class="alert alert-d" th:text="${errorMessage}"></div>
+
+<!-- Episode Context Picker Selector -->
+<div class="box">
+    <form action="/dashboard" method="get">
+        <label><strong>Active View Episode:</strong> </label>
+        <input type="number" name="episodeId" th:value="${episodeId}" min="1" required style="width: 70px;">
+        <button type="submit" class="btn btn-primary">Load Data</button>
+    </form>
+</div>
+
+<!-- Data Creation Panel UI Block -->
+<div class="box">
+    <h3>Add / Modify Scores</h3>
+    <form action="/dashboard/update-score" method="post">
+        <input type="hidden" name="episodeId" th:value="${episodeId}" />
+
+        <div style="margin-bottom: 10px;">
+            <label>Contestant Selection Number:</label><br/>
+            <!-- REQUIRED OPTION: 1 to 100 looping structural drop down select list -->
+            <select name="candidateId" required style="width: 200px;">
+                <option value="" disabled selected>-- Choose ID --</option>
+                <option th:each="val : ${#numbers.sequence(1, 100)}" th:value="${val}" th:text="'Contestant ' + ${val}"></option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label>Decimal Score Value (1.0 to 10.0):</label><br/>
+            <!-- REQUIRED OPTION: Enforces decimal validation constraint inputs using step values -->
+            <input type="number" name="judgeScore" step="0.1" min="1.0" max="10.0" placeholder="e.g. 7.5" required style="width: 190px;">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Contestant Record</button>
+    </form>
+</div>
+
+<!-- Data Table View Output Container Grid -->
+<div class="box">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3>Live Leaderboard Records</h3>
+        <form action="/dashboard/purge" method="post" onsubmit="return confirm('Purge all episode data?');">
+            <input type="hidden" name="episodeId" th:value="${episodeId}" />
+            <button type="submit" class="btn btn-danger">Purge Current Episode</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Rank</th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Public Votes</th>
+            <th>Judge Score (Edit Individually)</th>
+            <th>Final Composite Score</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${leaderboard}">
+            <td th:text="${row.rankPosition}">1</td>
+            <td th:text="${row.candidateId}">1</td>
+            <td th:text="${row.candidateName}">Contestant 1</td>
+            <td th:text="${row.publicVotes}">1000</td>
+            <td>
+                <!-- FEATURE: Independent Form Update Action Button Loop -->
+                <form action="/dashboard/update-score" method="post" class="row-form">
+                    <input type="hidden" name="episodeId" th:value="${episodeId}" />
+                    <input type="hidden" name="candidateId" th:value="${row.candidateId}" />
+                    <input type="number" name="judgeScore" th:value="${row.judgeScore}" step="0.1" min="1.0" max="10.0" class="input-inline" required>
+                    <button type="submit" class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;">Update</button>
+                </form>
+            </td>
+            <td th:text="${#numbers.formatDecimal(row.finalScore, 1, 2)}">0.00</td>
+            <td>
+                <!-- FEATURE: Independent Individual Row Record Deletion Form -->
+                <form action="/dashboard/delete-contestant" method="post" class="row-form" onsubmit="return confirm('Completely remove this contestant?');">
+                    <input type="hidden" name="episodeId" th:value="${episodeId}" />
+                    <input type="hidden" name="candidateId" th:value="${row.candidateId}" />
+                    <button type="submit" class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;">Delete</button>
+                </form>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(leaderboard)}">
+            <td colspan="7" style="text-align: center; color: #7f8c8d;">No records exist for this active episode yet.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
