@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Portal - Voting System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { overflow-x: hidden; transition: background-color 0.4s ease, color 0.4s ease; }
+        ::selection { background: currentColor; color: background; }
+
+        .portal-input { width: 100%; background: transparent; border-bottom: 1px solid; border-color: inherit; padding: 0.75rem 0; font-size: 1rem; transition: all 0.3s ease; outline: none; border-radius: 0; opacity: 0.8; }
+        .portal-input:focus { opacity: 1; border-color: currentColor; }
+        .portal-input::placeholder { opacity: 0.4; }
+        .portal-select { width: 100%; background: transparent; border-bottom: 1px solid; border-color: inherit; padding: 0.75rem 0; font-size: 1rem; outline: none; opacity: 0.8; cursor: pointer; appearance: none; }
+        .portal-select option { background: #121316; color: #fff; }
+
+        body.theme-light { background-color: #f2f2f2; color: #000000; }
+        body.theme-light .portal-card { background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border-color: #e4e4e7; }
+        body.theme-light .portal-select option { background: #fff; color: #000; }
+
+        body.theme-dark { background-color: #050609; color: #f2f2f2; }
+        body.theme-dark .portal-card { background-color: rgba(18, 19, 22, 0.9); backdrop-filter: blur(12px); border-color: #27272a; }
+
+        body.theme-white { background-color: #ffffff; color: #09090b; }
+        body.theme-white .portal-card { background-color: rgba(249, 249, 251, 0.9); backdrop-filter: blur(12px); border-color: #f4f4f5; }
+        body.theme-white .portal-select option { background: #fff; color: #000; }
+
+        .hidden-form { display: none !important; }
+        .btn-primary { background-color: #000; color: #fff; }
+        body.theme-dark .btn-primary { background-color: #f2f2f2; color: #000; }
+        .btn-primary:hover { opacity: .9; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col items-center justify-center theme-light relative" id="site-body">
+
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-10">
+    <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1600&q=80" alt="Background" class="w-full h-full object-cover grayscale mix-blend-multiply">
+</div>
+
+<div class="absolute top-8 left-8 right-8 flex justify-between items-center z-10">
+    <a href="index.html" class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i> Return Home
+    </a>
+    <div class="flex items-center border rounded-full p-1 text-sm font-bold uppercase tracking-wider border-current/25">
+        <button onclick="setTheme('theme-light')" id="btn-light" class="px-4 py-1.5 rounded-full transition-all cursor-pointer">Light</button>
+        <button onclick="setTheme('theme-dark')" id="btn-dark" class="px-4 py-1.5 rounded-full transition-all cursor-pointer">Dark</button>
+    </div>
+</div>
+
+<div class="relative z-10 max-w-md w-full px-6 my-12">
+    <div class="portal-card p-10 border shadow-2xl transition-colors duration-300">
+        <div class="flex items-center gap-3 mb-6">
+            <div id="status-indicator" class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+            <h2 id="form-title" class="font-bold text-xl tracking-widest uppercase">User Login</h2>
+        </div>
+
+        <div id="alert-box" class="hidden text-base font-mono uppercase tracking-wider mb-6 p-3 border rounded"></div>
+
+        <!-- LOGIN FORM -->
+        <form id="login-form" onsubmit="handleLogin(event)" class="flex flex-col gap-6">
+            <div>
+                <label class="block text-base font-mono uppercase opacity-120 mb-1">Email Address</label>
+                <input type="email" id="login-email" class="portal-input text-base" required>
+            </div>
+            <div>
+                <label class="block text-base font-mono uppercase opacity-120 mb-1">Password</label>
+                <div class="relative">
+                    <input type="password" id="login-pass" class="portal-input text-base pr-10" required>
+                    <button type="button" onclick="togglePasswordVisibility('login-pass', 'login-eye')" class="absolute right-0 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 transition-opacity p-2 cursor-pointer" aria-label="Toggle Password Visibility">
+                        <i data-lucide="eye" id="login-eye" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-base font-mono uppercase opacity-120 mb-1">Role</label>
+                <select id="login-role" class="portal-select text-base cursor-pointer">
+                    <option value="VOTER">Voter</option>
+                    <option value="CONTESTANT">Contestant</option>
+                    <option value="JUDGE">Judge</option>
+                    <option value="ADMIN">Admin</option>
+                </select>
+            </div>
+            <button type="submit" class="w-full btn-primary text-base font-bold uppercase tracking-widest py-4 transition-opacity mt-2 cursor-pointer">Authenticate</button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="register-form" onsubmit="handleRegister(event)" class="hidden-form flex flex-col gap-5">
+            <div>
+                <label class="block text-base font-mono uppercase opacity-120 mb-1">Full Name</label>
+                <input type="text" id="reg-name" class="portal-input text-base" required>
+            </div>
+            <div>
+                <label class="block text-base font-mono uppercase opacity-120 mb-1">Email Address</label>
+                <input type="email" id="reg-email" class="portal-input text-base" required>
+            </div>
+            <div>
+                <label class="block text-base font-mono uppercase opacity-120 mb-1">Password</label>
+                <div class="relative">
+                    <input type="password" id="reg-pass" class="portal-input text-base pr-10" required>
+                    <button type="button" onclick="togglePasswordVisibility('reg-pass', 'reg-eye')" class="absolute right-0 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 transition-opacity p-2 cursor-pointer" aria-label="Toggle Password Visibility">
+                        <i data-lucide="eye" id="reg-eye" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-base font-mono uppercase opacity-120 mb-1">Phone Number</label>
+                <input type="text" id="reg-phone" class="portal-input text-base" pattern="\d{10}" required>
+            </div>
+            <div>
+                <label class="block text-base font-mono uppercase opacity-120 mb-1">Role</label>
+                <select id="reg-role" class="portal-select text-base cursor-pointer">
+                    <option value="VOTER">Voter</option>
+                </select>
+            </div>
+            <button type="submit" class="w-full btn-primary text-base font-bold uppercase tracking-widest py-4 transition-opacity mt-2 cursor-pointer">Create Account</button>
+        </form>
+
+        <!-- FORCE PASSWORD CHANGE FORM -->
+        <form id="password-reset-form" onsubmit="handlePasswordChange(event)" class="hidden-form flex flex-col gap-6">
+            <div class="p-4 bg-orange-500/10 border border-orange-500/20 text-orange-600 text-sm font-mono mb-2 rounded">
+                Action Required: You are using a temporary password. You must set a new secure password to continue.
+            </div>
+            <div>
+                <label class="block text-sm font-mono uppercase opacity-60 mb-1">New Password</label>
+                <div class="relative">
+                    <input type="password" id="reset-new-pass" class="portal-input text-base pr-10" required minlength="6">
+                    <button type="button" onclick="togglePasswordVisibility('reset-new-pass', 'reset-new-eye')" class="absolute right-0 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 transition-opacity p-2 cursor-pointer" aria-label="Toggle Password Visibility">
+                        <i data-lucide="eye" id="reset-new-eye" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-mono uppercase opacity-60 mb-1">Confirm Password</label>
+                <div class="relative">
+                    <input type="password" id="reset-confirm-pass" class="portal-input text-base pr-10" required minlength="6">
+                    <button type="button" onclick="togglePasswordVisibility('reset-confirm-pass', 'reset-confirm-eye')" class="absolute right-0 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 transition-opacity p-2 cursor-pointer" aria-label="Toggle Password Visibility">
+                        <i data-lucide="eye" id="reset-confirm-eye" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="w-full btn-primary text-base font-bold uppercase tracking-widest py-4 transition-opacity mt-2 cursor-pointer">Update & Login</button>
+        </form>
+
+        <div class="mt-8 text-center border-t border-current/10 pt-6" id="toggle-footer">
+            <button type="button" onclick="toggleView()" class="text-sm font-mono uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+                <span id="toggle-text">Need an account? Register here</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_ROOT = 'http://localhost:8080/api';
+    const API_BASE = `${API_ROOT}/users`;
+
+    const Auth = {
+        get(key) {
+            try {
+                const v = sessionStorage.getItem(key) ?? localStorage.getItem(key);
+                if (v === 'undefined' || v === 'null' || v === '') return null;
+                return v;
+            } catch (e) {
+                return null;
+            }
+        },
+        save(user, role) {
+            try {
+                const { passwordHash, password, ...safeUser } = user;
+                const entries = {
+                    isLoggedIn: 'true',
+                    userId: String(user.id),
+                    userName: user.name || user.email || 'User',
+                    userEmail: user.email || '',
+                    userRole: role,
+                    userProfile: JSON.stringify(safeUser)
+                };
+                Object.entries(entries).forEach(([k, v]) => {
+                    sessionStorage.setItem(k, v);
+                    localStorage.setItem(k, v);
+                });
+            } catch (e) {
+                console.error("Storage write error:", e);
+            }
+        },
+        clear() {
+            try {
+                ['isLoggedIn', 'userId', 'userName', 'userEmail', 'userRole', 'userProfile', 'isAdminAuthenticated']
+                    .forEach(k => { sessionStorage.removeItem(k); localStorage.removeItem(k); });
+            } catch (e) {}
+        },
+        get isLoggedIn() { return this.get('isLoggedIn') === 'true' && !!this.get('userId'); },
+        get userId()     { return this.get('userId'); },
+        get userName()   { return this.get('userName') || 'User'; },
+        get userEmail()  { return this.get('userEmail') || ''; },
+        get role()       { return (this.get('userRole') || '').toUpperCase().replace('ROLE_', ''); },
+        get profile()    {
+            try {
+                const raw = this.get('userProfile');
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                // Self-heal if profile JSON is corrupted
+                localStorage.removeItem('userProfile');
+                sessionStorage.removeItem('userProfile');
+                return null;
+            }
+        },
+        logout(redirect = 'user-portal.html') {
+            this.clear();
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+            } catch (e) {}
+            window.location.replace(redirect);
+        }
+    };
+
+    async function parseResponse(res) {
+        const text = await res.text();
+        try { return JSON.parse(text); } catch { return text; }
+    }
+
+    lucide.createIcons();
+    let isLoginView = true;
+    let tempAuthData = null;
+
+    function togglePasswordVisibility(inputId, iconId) {
+        const inputElement = document.getElementById(inputId);
+        const iconElement = document.getElementById(iconId);
+
+        if (inputElement.type === 'password') {
+            inputElement.type = 'text';
+            iconElement.setAttribute('data-lucide', 'eye-off');
+        } else {
+            inputElement.type = 'password';
+            iconElement.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+    }
+
+    function setTheme(themeName) {
+        const body = document.getElementById('site-body');
+        body.className = `antialiased min-h-screen flex flex-col items-center justify-center relative ${themeName}`;
+        localStorage.setItem('preferred-theme', themeName);
+        ['theme-light', 'theme-dark', 'theme-white'].forEach(t => {
+            const btn = document.getElementById(t.replace('theme-', 'btn-'));
+            if(btn) {
+                btn.style.backgroundColor = t === themeName ? 'currentColor' : 'transparent';
+                btn.style.color = t === themeName ? (themeName === 'theme-dark' ? '#000' : '#fff') : 'inherit';
+            }
+        });
+    }
+
+    function showAlert(message, isSuccess) {
+        const box = document.getElementById('alert-box');
+        box.textContent = message;
+        box.className = `text-base font-mono uppercase tracking-wider mb-6 p-3 border rounded ${isSuccess ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`;
+        box.classList.remove('hidden');
+    }
+
+    function toggleView() {
+        isLoginView = !isLoginView;
+        document.getElementById('login-form').classList.toggle('hidden-form', !isLoginView);
+        document.getElementById('register-form').classList.toggle('hidden-form', isLoginView);
+        document.getElementById('password-reset-form').classList.add('hidden-form');
+        document.getElementById('form-title').innerText = isLoginView ? 'User Login' : 'Register Account';
+        document.getElementById('toggle-text').innerText = isLoginView ? 'Need an account? Register here' : 'Already have an account? Login here';
+        document.getElementById('alert-box').classList.add('hidden');
+
+        ['login-pass', 'reg-pass', 'reset-new-pass', 'reset-confirm-pass'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.type = 'password';
+        });
+        ['login-eye', 'reg-eye', 'reset-new-eye', 'reset-confirm-eye'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.setAttribute('data-lucide', 'eye');
+        });
+        lucide.createIcons();
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const payload = {
+            email: document.getElementById('login-email').value,
+            password: document.getElementById('login-pass').value,
+            role: document.getElementById('login-role').value
+        };
+
+        try {
+            const response = await fetch(`${API_BASE}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await parseResponse(response);
+
+            if (response.ok) {
+                if (typeof data === 'string') {
+                    showAlert(data, false);
+                    return;
+                }
+
+                if ((payload.role === 'JUDGE' && payload.password === 'Judge@2026') ||
+                    (payload.role === 'CONTESTANT' && payload.password === 'Contestant@2026')) {
+
+                    tempAuthData = { email: payload.email, data: data, role: payload.role };
+                    document.getElementById('login-form').classList.add('hidden-form');
+                    document.getElementById('toggle-footer').classList.add('hidden');
+                    document.getElementById('password-reset-form').classList.remove('hidden-form');
+                    document.getElementById('form-title').innerText = 'Security Setup';
+                    showAlert('Temporary password detected. Action required.', false);
+                    return;
+                }
+
+                finalizeLogin(data, payload.role);
+            } else {
+                const errorMsg = typeof data === 'string' && data ? data : (data.message || 'Authentication failed');
+                showAlert(errorMsg, false);
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            showAlert('Server connection error', false);
+        }
+    }
+
+    async function handlePasswordChange(e) {
+        e.preventDefault();
+        const newPass = document.getElementById('reset-new-pass').value;
+        const confirmPass = document.getElementById('reset-confirm-pass').value;
+
+        if (newPass !== confirmPass) {
+            showAlert('Passwords do not match!', false);
+            return;
+        }
+        if (newPass === 'Judge@2026' || newPass === 'Contestant@2026') {
+            showAlert('You cannot reuse the temporary password.', false);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_ROOT}/users/update-password`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: tempAuthData.email, newPassword: newPass })
+            });
+
+            if (response.ok) {
+                showAlert('Password secured. Logging you in...', true);
+                setTimeout(() => finalizeLogin(tempAuthData.data, tempAuthData.role), 1500);
+            } else {
+                showAlert('Failed to update password.', false);
+            }
+        } catch (error) {
+            showAlert('Server error during password update.', false);
+        }
+    }
+
+    function finalizeLogin(data, role) {
+        const userObj = data.user || data;
+        const userId = userObj.id ?? userObj.userId ?? userObj.user_id;
+
+        if (!userId) {
+            console.error("Login object missing identifier:", data);
+            showAlert("Authentication error: User ID not returned by server.", false);
+            return;
+        }
+
+        userObj.id = userId;
+        Auth.save(userObj, role);
+
+        if (role === 'ADMIN') {
+            localStorage.setItem('isAdminAuthenticated', 'true');
+            sessionStorage.setItem('isAdminAuthenticated', 'true');
+        }
+
+        showAlert('Authentication successful. Redirecting...', true);
+
+        setTimeout(() => {
+            if (role === 'ADMIN') window.location.href = 'management.html';
+            else if (role === 'CONTESTANT') window.location.href = 'contestant-portal.html';
+            else window.location.href = 'index.html';
+        }, 1200);
+    }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('reg-name').value,
+            email: document.getElementById('reg-email').value,
+            passwordHash: document.getElementById('reg-pass').value,
+            phoneNum: document.getElementById('reg-phone').value,
+            role: document.getElementById('reg-role').value,
+            showId: null
+        };
+
+        try {
+            const response = await fetch(`${API_BASE}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await parseResponse(response);
+            if (response.ok) {
+                showAlert('Registration complete. Please login.', true);
+                document.getElementById('register-form').reset();
+                setTimeout(toggleView, 2000);
+            } else {
+                showAlert(typeof data === 'string' && data ? data : (data.message || 'Registration failed'), false);
+            }
+        } catch (error) {
+            console.error("Registration error:", error);
+            showAlert('Server connection error', false);
+        }
+    }
+
+    window.onload = () => {
+        setTheme(localStorage.getItem('preferred-theme') || 'theme-light');
+    };
+</script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discover Shows - Voting System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { overflow-x: hidden; transition: background-color 0.4s ease, color 0.4s ease; }
+    ::selection { background: currentColor; color: background; }
+
+    /* Theme Styles with Glassmorphism matching management and contestants views */
+    body.theme-light { background-color: #f2f2f2; color: #000000; }
+    body.theme-light .admin-header { background-color: rgba(242, 242, 242, 0.85); border-color: #e4e4e7; }
+    body.theme-light .admin-card { background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border-color: #e4e4e7; }
+    body.theme-light .modal-content { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px); border-color: #e4e4e7; }
+
+    body.theme-dark { background-color: #050609; color: #f2f2f2; }
+    body.theme-dark .admin-header { background-color: rgba(5, 6, 9, 0.85); border-color: #27272a; }
+    body.theme-dark .admin-card { background-color: rgba(18, 19, 22, 0.9); backdrop-filter: blur(12px); border-color: #27272a; }
+    body.theme-dark .modal-content { background: rgba(18, 19, 22, 0.95); backdrop-filter: blur(16px); border-color: #27272a; }
+
+    body.theme-white { background-color: #ffffff; color: #09090b; }
+    body.theme-white .admin-header { background-color: rgba(255, 255, 255, 0.85); border-color: #f4f4f5; }
+    body.theme-white .admin-card { background-color: rgba(249, 249, 251, 0.9); backdrop-filter: blur(12px); border-color: #f4f4f5; }
+    body.theme-white .modal-content { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px); border-color: #f4f4f5; }
+  </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col theme-light relative" id="site-body">
+
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-10">
+  <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1600&q=80" alt="Background" class="w-full h-full object-cover grayscale mix-blend-multiply">
+</div>
+
+<div class="admin-header sticky top-0 backdrop-blur-md z-50 border-b px-8 py-6 flex justify-between items-center transition-colors duration-300">
+  <div class="flex items-center gap-4 relative z-10">
+    <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+    <h2 class="font-bold text-sm tracking-widest uppercase">Show Directory</h2>
+  </div>
+
+  <!-- THEME SWITCHER -->
+  <div class="flex items-center border rounded-full p-1 text-xs font-bold uppercase tracking-wider border-current/25 relative z-10">
+    <button onclick="setTheme('theme-light')" id="btn-light" class="px-3 py-1 rounded-full transition-all cursor-pointer">Light</button>
+    <button onclick="setTheme('theme-dark')" id="btn-dark" class="px-3 py-1 rounded-full transition-all cursor-pointer">Dark</button>
+  </div>
+
+  <div class="flex items-center gap-6 relative z-10">
+    <div id="auth-nav-container">
+      <a href="user-portal.html" class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest opacity-80 hover:opacity-100 transition-opacity">
+        Login
+      </a>
+    </div>
+
+    <a href="index.html" class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest opacity-80 hover:opacity-100 transition-opacity">
+      Home <i data-lucide="arrow-right" class="w-5 h-5"></i>
+    </a>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto w-full px-8 py-12 flex-1 relative z-10">
+  <div class="mb-8 text-center lg:text-left flex flex-col lg:flex-row justify-between items-center gap-6">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight mb-2">Discover Shows</h1>
+      <p class="opacity-60 text-sm">Explore upcoming, ongoing, and completed reality shows across the network.</p>
+    </div>
+  </div>
+
+  <!-- CATEGORY FILTER TABS -->
+  <div class="flex flex-wrap gap-4 border-b border-current/20 pb-6 mb-10" id="filter-container">
+    <button onclick="filterShows('ALL')" class="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-widest border border-current/20 transition-all cursor-pointer filter-btn bg-current text-background" data-status="ALL">All Shows</button>
+    <button onclick="filterShows('ONGOING')" class="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-widest border border-current/20 opacity-70 hover:opacity-100 transition-all cursor-pointer filter-btn" data-status="ONGOING">Ongoing</button>
+    <button onclick="filterShows('UPCOMING')" class="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-widest border border-current/20 opacity-70 hover:opacity-100 transition-all cursor-pointer filter-btn" data-status="UPCOMING">Upcoming</button>
+    <button onclick="filterShows('COMPLETED')" class="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-widest border border-current/20 opacity-70 hover:opacity-100 transition-all cursor-pointer filter-btn" data-status="COMPLETED">Completed</button>
+  </div>
+
+  <!-- SHOWS GRID CARDS -->
+  <div id="shows-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <p class="col-span-3 text-center py-12 opacity-60 text-sm italic font-mono">Loading shows directory...</p>
+  </div>
+</div>
+
+<!-- PERFORMING CONTESTANTS MODAL -->
+<div id="contestants-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+  <div class="modal-content w-full max-w-2xl border rounded-2xl shadow-2xl p-6 relative max-h-[85vh] flex flex-col">
+    <div class="flex justify-between items-center pb-4 border-b border-current/10 mb-6">
+      <h3 id="modal-show-title" class="text-lg font-bold uppercase tracking-wider">Performing Contestants</h3>
+      <button onclick="closeContestantsModal()" class="opacity-70 hover:opacity-100 transition-opacity cursor-pointer">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+    </div>
+    <div id="modal-contestants-list" class="overflow-y-auto flex-1 space-y-4 pr-2">
+      <!-- Dynamically populated -->
+    </div>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+  const API_ROOT = 'http://localhost:8080/api';
+  let showsCache = [];
+  let currentFilter = 'ALL';
+
+  const Auth = {
+    get(key) {
+      try {
+        const v = sessionStorage.getItem(key) ?? localStorage.getItem(key);
+        return (v === 'undefined' || v === 'null') ? null : v;
+      } catch { return null; }
+    },
+    get isLoggedIn() { return this.get('isLoggedIn') === 'true' && !!this.get('userId'); },
+    get userName()   { return this.get('userName') || 'User'; },
+    get role()       { return (this.get('userRole') || '').toUpperCase().replace('ROLE_', ''); }
+  };
+
+  function updateHeaderAuthUI() {
+    const authContainer = document.getElementById('auth-nav-container');
+    if (!authContainer) return;
+
+    if (Auth.isLoggedIn) {
+      authContainer.innerHTML = `
+        <a href="account.html" class="flex items-center gap-2 text-xs font-mono uppercase tracking-widest px-4 py-2 border border-current/20 rounded-full hover:bg-current/10 transition-all">
+            <i data-lucide="user" class="w-4 h-4"></i> ${Auth.userName} (${Auth.role})
+        </a>`;
+    } else {
+      authContainer.innerHTML = `
+        <a href="user-portal.html" class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest opacity-80 hover:opacity-100 transition-opacity">
+            Login
+        </a>`;
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function setTheme(themeName) {
+    const body = document.getElementById('site-body');
+    body.className = `antialiased min-h-screen flex flex-col relative ${themeName}`;
+    localStorage.setItem('preferred-theme', themeName);
+
+    ['theme-light', 'theme-dark', 'theme-white'].forEach(t => {
+      const btn = document.getElementById(t.replace('theme-', 'btn-'));
+      if(btn) {
+        if(t === themeName) {
+          btn.style.backgroundColor = 'currentColor';
+          btn.style.color = themeName === 'theme-dark' ? '#000' : '#fff';
+        } else {
+          btn.style.backgroundColor = 'transparent';
+          btn.style.color = 'inherit';
+        }
+      }
+    });
+  }
+
+  function esc(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c =>
+            ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  async function fetchShows() {
+    const grid = document.getElementById('shows-grid');
+    try {
+      const response = await fetch(`${API_ROOT}/shows`);
+      if (!response.ok) throw new Error("Shows data not available");
+
+      showsCache = await response.json();
+      renderShowsGrid(showsCache);
+    } catch (error) {
+      grid.innerHTML = `<p class="col-span-3 text-center text-red-500 text-sm italic font-mono py-12">Unable to connect to backend server.</p>`;
+    }
+  }
+
+  function filterShows(status) {
+    currentFilter = status;
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      if (btn.dataset.status === status) {
+        btn.className = "px-5 py-2 rounded-full text-xs font-mono uppercase tracking-widest border border-current/20 bg-current text-background transition-all cursor-pointer filter-btn";
+        btn.style.backgroundColor = 'currentColor';
+        btn.style.color = document.body.classList.contains('theme-dark') ? '#000' : '#fff';
+      } else {
+        btn.className = "px-5 py-2 rounded-full text-xs font-mono uppercase tracking-widest border border-current/20 opacity-70 hover:opacity-100 transition-all cursor-pointer filter-btn";
+        btn.style.backgroundColor = 'transparent';
+        btn.style.color = 'inherit';
+      }
+    });
+
+    const filtered = status === 'ALL' ? showsCache : showsCache.filter(s => s.status === status);
+    renderShowsGrid(filtered);
+  }
+
+  function renderShowsGrid(shows) {
+    const grid = document.getElementById('shows-grid');
+    const badgeStyle = {
+      ONGOING: 'bg-green-500/15 text-green-500 border-green-500/30',
+      UPCOMING: 'bg-blue-500/15 text-blue-500 border-blue-500/30',
+      COMPLETED: 'bg-zinc-500/15 opacity-70 border-zinc-500/30'
+    };
+
+    if (shows.length === 0) {
+      grid.innerHTML = `<p class="col-span-3 text-center opacity-60 text-sm italic font-mono py-12">No shows found in this category.</p>`;
+      return;
+    }
+
+    grid.innerHTML = shows.map(s => `
+        <div class="admin-card p-8 border rounded-2xl shadow-xl flex flex-col justify-between transition-all">
+            <div>
+                <div class="flex justify-between items-start mb-6">
+                    <span class="px-3 py-1 text-[10px] font-bold font-mono uppercase tracking-widest border rounded-full ${badgeStyle[s.status] || 'bg-current/10'}">
+                        ${esc(s.status)}
+                    </span>
+                    <span class="font-mono text-xs opacity-60">REF ID: #${esc(s.id)}</span>
+                </div>
+                <h3 class="text-2xl font-bold uppercase tracking-tight mb-3">${esc(s.title)}</h3>
+                <p class="text-sm opacity-80 mb-6 leading-relaxed">${esc(s.description || 'No description provided.')}</p>
+            </div>
+            <div class="border-t border-current/10 pt-6 flex flex-col gap-4">
+                <div class="flex items-center justify-between text-xs font-mono opacity-70">
+                    <span>START DATE</span>
+                    <span>${esc(s.startDate || 'TBD')}</span>
+                </div>
+                <button onclick="viewPerformingContestants(${s.id}, '${esc(s.title).replace(/'/g, "\\'")}')" class="w-full bg-current text-background text-xs font-bold uppercase tracking-widest py-3 text-center transition-opacity hover:opacity-90 cursor-pointer rounded" style="background-color: var(--tw-prose-invert-body, black); color: white;">
+                    View Performing Contestants
+                </button>
+            </div>
+        </div>
+    `).join('');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  async function viewPerformingContestants(showId, showTitle) {
+    const modal = document.getElementById('contestants-modal');
+    const titleEl = document.getElementById('modal-show-title');
+    const listEl = document.getElementById('modal-contestants-list');
+
+    titleEl.innerText = `Contestants Performing in: ${showTitle}`;
+    listEl.innerHTML = `<p class="text-center py-8 opacity-60 text-sm italic font-mono">Loading performing contestants...</p>`;
+    modal.classList.remove('hidden');
+
+    try {
+      const res = await fetch(`${API_ROOT}/contestants`);
+      if (!res.ok) throw new Error("Failed to load contestants");
+      const allContestants = await res.json();
+      const showContestants = allContestants.filter(c => String(c.showId) === String(showId));
+
+      if (showContestants.length === 0) {
+        listEl.innerHTML = `<p class="text-center py-8 opacity-60 text-sm italic font-mono">No contestants registered for this show yet.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = showContestants.map(c => `
+        <div class="flex items-center gap-4 p-4 border border-current/10 rounded-xl bg-current/5">
+          ${c.photoUrl ? `<img src="${c.photoUrl}" class="w-12 h-12 rounded-full object-cover border border-current/20">` : `<div class="w-12 h-12 rounded-full bg-current/10 border border-current/20 flex items-center justify-center font-bold">${c.name.charAt(0)}</div>`}
+          <div class="flex-1">
+            <h4 class="font-bold uppercase text-sm">${esc(c.name)} <span class="text-xs font-mono opacity-65 font-normal">(Age ${esc(c.age)})</span></h4>
+            <p class="text-xs opacity-75 mt-0.5 line-clamp-1">${esc(c.bio || 'No biography provided.')}</p>
+          </div>
+          <span class="text-[10px] font-mono px-2.5 py-1 border border-current/20 rounded-full opacity-70">ID #${esc(c.id)}</span>
+        </div>
+      `).join('');
+    } catch (e) {
+      listEl.innerHTML = `<p class="text-center py-8 text-red-500 text-sm italic font-mono">Unable to retrieve contestants.</p>`;
+    }
+  }
+
+  function closeContestantsModal() {
+    document.getElementById('contestants-modal').classList.add('hidden');
+  }
+
+  window.onload = () => {
+    const savedTheme = localStorage.getItem('preferred-theme') || 'theme-light';
+    setTheme(savedTheme);
+    updateHeaderAuthUI();
+    fetchShows();
+  };
+</script>
+</body>
+</html>

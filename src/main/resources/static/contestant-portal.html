@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contestant Portal - Performance Schedule</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { overflow-x: hidden; transition: background-color 0.4s ease, color 0.4s ease; }
+        body.theme-dark { background-color: #050609; color: #f2f2f2; }
+        .card { background-color: rgba(18, 19, 22, 0.9); backdrop-filter: blur(12px); border-color: #27272a; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col theme-dark" id="site-body">
+
+<!-- Top Navigation Bar -->
+<nav class="w-full h-24 flex items-center justify-between px-8 border-b border-current/10">
+    <div class="flex items-center gap-4">
+        <span class="font-semibold text-sm tracking-widest uppercase">Contestant Secure Portal</span>
+    </div>
+    <div class="flex items-center gap-6">
+        <span id="contestant-welcome" class="text-sm font-mono opacity-80">Loading profile...</span>
+        <button onclick="handleLogout()" class="text-xs font-bold uppercase tracking-widest text-red-500 hover:opacity-75">Logout</button>
+    </div>
+</nav>
+
+<!-- Main Content Area -->
+<main class="max-w-4xl mx-auto px-8 py-16 flex-grow w-full">
+    <div class="mb-12">
+        <h1 class="text-4xl font-bold uppercase tracking-tight mb-2">My Performance Schedule</h1>
+        <p class="text-sm font-mono opacity-60 uppercase">Official assigned show details managed by administration.</p>
+    </div>
+
+    <div id="schedule-container" class="card p-8 border rounded-lg shadow-2xl">
+        <p class="text-sm font-mono animate-pulse">Syncing schedule data from database...</p>
+    </div>
+</main>
+
+<footer class="py-8 text-center text-xs font-mono opacity-40 uppercase tracking-widest">
+    &copy; 2026 Reality Show Voting System • Secure Contestant Node
+</footer>
+
+<script>
+    lucide.createIcons();
+    const API_BASE_URL = 'http://localhost:8080/api';
+
+    function handleLogout() {
+        sessionStorage.clear();
+        window.location.href = 'user-portal.html';
+    }
+
+    async function loadContestantSchedule() {
+        const userId = sessionStorage.getItem('userId');
+        const userRole = sessionStorage.getItem('userRole');
+
+        // Security Guard: Only allow contestants
+        if (!userId || userRole !== 'CONTESTANT') {
+            alert("Unauthorized access. Contestants only.");
+            window.location.href = 'user-portal.html';
+            return;
+        }
+
+        try {
+            // 1. Fetch all contestants to find the record matching this user's profile/email/id
+            const resContestants = await fetch(`${API_BASE_URL}/contestants`);
+            const contestants = await resContestants.json();
+
+            // Assuming user ID maps or you can match by name/email. Let's look up by ID or linked property:
+            // (If your contestant table has a userId foreign key, match against that. Otherwise match by matching name)
+            const userName = sessionStorage.getItem('userName');
+            const contestantProfile = contestants.find(c => c.name.toLowerCase() === userName.toLowerCase());
+
+            if (!contestantProfile || !contestantProfile.showId) {
+                document.getElementById('schedule-container').innerHTML = `
+                    <div class="text-center py-8">
+                        <h3 class="text-xl font-bold uppercase mb-2">No Show Assigned Yet</h3>
+                        <p class="text-xs font-mono opacity-60">The administration has not yet mapped you to an active show. Please check back later.</p>
+                    </div>
+                `;
+                document.getElementById('contestant-welcome').innerText = `Welcome, ${userName}`;
+                return;
+            }
+
+            document.getElementById('contestant-welcome').innerText = `Logged in as: ${contestantProfile.name}`;
+
+            // 2. Fetch the specific show details using the assigned showId
+            const resShow = await fetch(`${API_BASE_URL}/shows/${contestantProfile.showId}`);
+            const showData = await resShow.json();
+
+            // 3. Render Schedule Details
+            document.getElementById('schedule-container').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <span class="text-[10px] font-mono bg-current/10 px-3 py-1 uppercase tracking-widest border border-current/20">Assigned Production</span>
+                        <h2 class="text-3xl font-bold uppercase tracking-tight mt-4 mb-2">${showData.title}</h2>
+                        <p class="text-sm opacity-80 mb-6">${showData.description}</p>
+                        <div class="space-y-2 font-mono text-xs">
+                            <p><span class="opacity-60">Show Reference:</span> #${showData.id}</p>
+                            <p><span class="opacity-60">Status:</span> <span class="text-green-400">${showData.status}</span></p>
+                        </div>
+                    </div>
+                    <div class="border-l border-current/10 pl-8 space-y-4 font-mono">
+                        <div>
+                            <span class="text-xs opacity-60 uppercase block">Performance Date</span>
+                            <span class="text-lg font-bold">${showData.startDate}</span>
+                        </div>
+                        <div>
+                            <span class="text-xs opacity-60 uppercase block">Call Time Location</span>
+                            <span class="text-lg font-bold">Main Stage Studio A, Seeduwa</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error("Error loading contestant schedule:", error);
+            document.getElementById('schedule-container').innerHTML = `<p class="text-red-500 font-mono text-xs">Failed to load assigned schedule data.</p>`;
+        }
+    }
+
+    const Auth = {
+        get(key) {
+            const v = sessionStorage.getItem(key) ?? localStorage.getItem(key);
+            return (v === 'undefined' || v === 'null') ? null : v;
+        },
+        save(user, role) {
+            const { passwordHash, password, ...safeUser } = user;
+            const entries = {
+                isLoggedIn: 'true',
+                userId: String(user.id),
+                userName: user.name || user.email || 'User',
+                userEmail: user.email || '',
+                userRole: role,
+                userProfile: JSON.stringify(safeUser)
+            };
+            Object.entries(entries).forEach(([k, v]) => {
+                sessionStorage.setItem(k, v);
+                localStorage.setItem(k, v);
+            });
+        },
+        clear() {
+            ['isLoggedIn', 'userId', 'userName', 'userEmail', 'userRole', 'userProfile', 'isAdminAuthenticated']
+                .forEach(k => { sessionStorage.removeItem(k); localStorage.removeItem(k); });
+        },
+        get isLoggedIn() { return this.get('isLoggedIn') === 'true' && !!this.get('userId'); },
+        get userId()     { return this.get('userId'); },
+        get userName()   { return this.get('userName') || 'User'; },
+        get userEmail()  { return this.get('userEmail') || ''; },
+        get role()       { return (this.get('userRole') || '').toUpperCase().replace('ROLE_', ''); },
+        get profile()    { try { return JSON.parse(this.get('userProfile')); } catch { return null; } },
+
+        // --> REPLACE YOUR LOGOUT METHOD WITH THIS ENTIRE BLOCK:
+        logout(redirect = 'user-portal.html') {
+            this.clear();
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.replace(redirect);
+        }
+    };
+
+    window.onload = () => {
+        loadContestantSchedule();
+    };
+</script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sponsor Management - Voting System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { overflow-x: hidden; transition: background-color 0.4s ease, color 0.4s ease; }
+        ::selection { background: currentColor; color: background; }
+
+        .admin-input { width: 100%; background: transparent; border-bottom: 1px solid; border-color: inherit; padding: 0.5rem 0; font-size: 0.875rem; transition: all 0.3s ease; outline: none; border-radius: 0; opacity: 0.8; }
+        .admin-input:focus { opacity: 1; border-color: currentColor; }
+        .admin-input::placeholder { opacity: 0.5; }
+        .admin-select { width: 100%; background: transparent; border-bottom: 1px solid; border-color: inherit; padding: 0.5rem 0; font-size: 0.875rem; outline: none; opacity: 0.8; cursor: pointer; }
+
+        body.theme-light { background-color: #f2f2f2; color: #000000; }
+        body.theme-light .admin-header { background-color: rgba(242, 242, 242, 0.85); border-color: #e4e4e7; }
+        body.theme-light .admin-card { background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border-color: #e4e4e7; }
+        body.theme-light .admin-select option { background: #fff; color: #000; }
+
+        body.theme-dark { background-color: #050609; color: #f2f2f2; }
+        body.theme-dark .admin-header { background-color: rgba(5, 6, 9, 0.85); border-color: #27272a; }
+        body.theme-dark .admin-card { background-color: rgba(18, 19, 22, 0.9); backdrop-filter: blur(12px); border-color: #27272a; }
+        body.theme-dark .admin-select option { background: #121316; color: #fff; }
+
+        body.theme-white { background-color: #ffffff; color: #09090b; }
+        body.theme-white .admin-header { background-color: rgba(255, 255, 255, 0.85); border-color: #f4f4f5; }
+        body.theme-white .admin-card { background-color: rgba(249, 249, 251, 0.9); backdrop-filter: blur(12px); border-color: #f4f4f5; }
+        body.theme-white .admin-select option { background: #fff; color: #000; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col theme-light relative" id="site-body">
+
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-10">
+    <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1600&q=80" alt="Background" class="w-full h-full object-cover grayscale mix-blend-multiply">
+</div>
+
+<!-- HEADER -->
+<div class="admin-header sticky top-0 backdrop-blur-md z-50 border-b px-8 py-6 flex justify-between items-center transition-colors duration-300">
+    <div class="flex items-center gap-4 relative z-10">
+        <div class="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+        <h2 class="font-bold text-sm tracking-widest uppercase">Sponsor Management Protocol</h2>
+    </div>
+    <div class="flex items-center border rounded-full p-1 text-xs font-bold uppercase tracking-wider border-current/25 relative z-10">
+        <button onclick="setTheme('theme-light')" id="btn-light" class="px-3 py-1 rounded-full transition-all cursor-pointer">Light</button>
+        <button onclick="setTheme('theme-dark')" id="btn-dark" class="px-3 py-1 rounded-full transition-all cursor-pointer">Dark</button>
+    </div>
+    <div class="flex items-center gap-6 relative z-10">
+        <a href="management.html" class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest opacity-80 hover:opacity-100 transition-opacity">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Admin Dashboard
+        </a>
+        <a href="index.html" class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest opacity-80 hover:opacity-100 transition-opacity">
+            Home <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </a>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="max-w-7xl mx-auto w-full px-8 py-12 flex-1 relative z-10">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- FORM COLUMN -->
+        <div class="lg:col-span-4">
+            <div class="admin-card p-8 border shadow-sm transition-colors duration-300">
+                <h3 class="text-xs font-bold uppercase tracking-widest mb-6" id="form-title">
+                    <i data-lucide="award" class="w-4 h-4 inline"></i> Register Sponsor
+                </h3>
+                <form id="sponsor-form" onsubmit="saveSponsor(event)" class="flex flex-col gap-5">
+                    <input type="hidden" id="sponsor-id">
+                    <input type="text" id="sponsor-name" class="admin-input" placeholder="SPONSOR CONTACT NAME" required>
+                    <input type="email" id="sponsor-email" class="admin-input" placeholder="EMAIL ADDRESS" required>
+                    <input type="text" id="sponsor-company" class="admin-input" placeholder="COMPANY NAME" required>
+
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase opacity-60 mb-1">Sponsor Tier</label>
+                        <select id="sponsor-tier" class="admin-select" required>
+                            <option value="PLATINUM">PLATINUM</option>
+                            <option value="GOLD">GOLD</option>
+                            <option value="SILVER">SILVER</option>
+                            <option value="BRONZE">BRONZE</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase opacity-60 mb-1">Payment Status</label>
+                        <select id="sponsor-payment" class="admin-select" required>
+                            <option value="PENDING">PENDING</option>
+                            <option value="PAID">PAID</option>
+                            <option value="FAILED">FAILED</option>
+                        </select>
+                    </div>
+
+                    <input type="number" step="0.01" id="sponsor-amount" class="admin-input" placeholder="CONTRIBUTION AMOUNT ($)" required>
+                    <input type="number" id="sponsor-show-id" class="admin-input" placeholder="ASSOCIATED SHOW ID (OPTIONAL)">
+
+                    <button type="submit" id="submit-btn" class="w-full bg-current text-background text-xs font-bold uppercase tracking-widest py-3 hover:opacity-90 transition-opacity cursor-pointer mt-2" style="background-color: var(--tw-prose-invert-body, black); color: white;">
+                        Register Sponsor
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- TABLE COLUMN -->
+        <div class="lg:col-span-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xs font-bold uppercase tracking-widest opacity-80">Active Sponsors Directory</h3>
+                <button onclick="fetchSponsors()" class="text-xs font-mono uppercase tracking-widest opacity-60 hover:opacity-100 flex items-center gap-1 cursor-pointer">
+                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh
+                </button>
+            </div>
+            <div class="overflow-x-auto admin-card p-6 border shadow-sm">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead>
+                    <tr class="border-b-2 border-current/30 text-[10px] font-bold uppercase tracking-widest opacity-70">
+                        <th class="py-3 pr-4">ID</th>
+                        <th class="py-3 pr-4">Company</th>
+                        <th class="py-3 pr-4">Tier</th>
+                        <th class="py-3 pr-4">Payment</th>
+                        <th class="py-3 pr-4">Amount</th>
+                        <th class="py-3 pr-4">Show</th>
+                        <th class="py-3 text-right">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="sponsors-table-body">
+                    <tr><td colspan="7" class="py-8 text-center opacity-60 text-sm italic font-mono">Loading sponsors...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+    const API_BASE_URL = 'http://localhost:8080/api/sponsors';
+    let sponsorsCache = [];
+
+    function setTheme(themeName) {
+        const body = document.getElementById('site-body');
+        body.className = `antialiased min-h-screen flex flex-col relative ${themeName}`;
+        localStorage.setItem('preferred-theme', themeName);
+        ['theme-light', 'theme-dark', 'theme-white'].forEach(t => {
+            const btn = document.getElementById(t.replace('theme-', 'btn-'));
+            if(btn) {
+                btn.style.backgroundColor = t === themeName ? 'currentColor' : 'transparent';
+                btn.style.color = t === themeName ? (themeName === 'theme-dark' ? '#000' : '#fff') : 'inherit';
+            }
+        });
+    }
+
+    async function fetchSponsors() {
+        const tbody = document.getElementById('sponsors-table-body');
+        try {
+            const res = await fetch(API_BASE_URL);
+            if (!res.ok) throw new Error("Failed to fetch sponsors");
+            sponsorsCache = await res.json();
+            renderSponsors(sponsorsCache);
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-red-500 text-sm italic font-mono">Unable to connect to backend server.</td></tr>`;
+        }
+    }
+
+    function renderSponsors(sponsors) {
+        const tbody = document.getElementById('sponsors-table-body');
+        const tierBadge = {
+            PLATINUM: 'bg-purple-500/15 text-purple-500 border-purple-500/30',
+            GOLD: 'bg-yellow-500/15 text-yellow-500 border-yellow-500/30',
+            SILVER: 'bg-blue-500/15 text-blue-500 border-blue-500/30',
+            BRONZE: 'bg-orange-500/15 text-orange-500 border-orange-500/30'
+        };
+        const paymentBadge = {
+            PAID: 'text-green-500',
+            PENDING: 'text-yellow-500',
+            FAILED: 'text-red-500'
+        };
+
+        tbody.innerHTML = sponsors.length ? sponsors.map(s => `
+            <tr class="border-b border-current/10 hover:opacity-100 transition-colors">
+                <td class="py-4 pr-4 font-mono text-xs">#${s.id}</td>
+                <td class="py-4 pr-4 font-medium">${s.companyName} <span class="block text-[10px] opacity-60 font-normal">${s.name}</span></td>
+                <td class="py-4 pr-4"><span class="px-2 py-0.5 text-[10px] font-bold font-mono uppercase border rounded-full ${tierBadge[s.tier] || 'bg-current/10'}">${s.tier}</span></td>
+                <td class="py-4 pr-4 font-mono text-xs font-bold ${paymentBadge[s.paymentStatus] || ''}">${s.paymentStatus}</td>
+                <td class="py-4 pr-4 font-mono text-xs">$${Number(s.contributionAmount || 0).toLocaleString()}</td>
+                <td class="py-4 pr-4 font-mono text-xs">${s.showId ? '#' + s.showId : 'Global'}</td>
+                <td class="py-4 text-right space-x-3">
+                    <button class="text-xs font-bold uppercase tracking-widest text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" onclick="editSponsor(${s.id})">Edit</button>
+                    <button class="text-xs font-bold uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors cursor-pointer" onclick="deleteSponsor(${s.id})">Remove</button>
+                </td>
+            </tr>
+        `).join('') : `<tr><td colspan="7" class="py-8 text-center opacity-60 text-sm italic font-mono">No sponsors registered.</td></tr>`;
+        lucide.createIcons();
+    }
+
+    async function saveSponsor(event) {
+        event.preventDefault();
+        const id = document.getElementById('sponsor-id').value;
+        const payload = {
+            name: document.getElementById('sponsor-name').value.trim(),
+            email: document.getElementById('sponsor-email').value.trim(),
+            companyName: document.getElementById('sponsor-company').value.trim(),
+            tier: document.getElementById('sponsor-tier').value,
+            paymentStatus: document.getElementById('sponsor-payment').value,
+            contributionAmount: parseFloat(document.getElementById('sponsor-amount').value),
+            showId: document.getElementById('sponsor-show-id').value ? parseInt(document.getElementById('sponsor-show-id').value) : null
+        };
+
+        try {
+            const res = await fetch(id ? `${API_BASE_URL}/${id}` : API_BASE_URL, {
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error("Failed to save sponsor");
+
+            resetForm();
+            fetchSponsors();
+        } catch (e) {
+            alert('Error communicating with backend server.');
+        }
+    }
+
+    function editSponsor(id) {
+        const s = sponsorsCache.find(item => item.id === id);
+        if (!s) return;
+
+        document.getElementById('sponsor-id').value = s.id;
+        document.getElementById('sponsor-name').value = s.name || '';
+        document.getElementById('sponsor-email').value = s.email || '';
+        document.getElementById('sponsor-company').value = s.companyName || '';
+        document.getElementById('sponsor-tier').value = s.tier || 'BRONZE';
+        document.getElementById('sponsor-payment').value = s.paymentStatus || 'PENDING';
+        document.getElementById('sponsor-amount').value = s.contributionAmount || '';
+        document.getElementById('sponsor-show-id').value = s.showId || '';
+
+        document.getElementById('form-title').innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 inline"></i> Edit Sponsor (ID: #${s.id})`;
+        document.getElementById('submit-btn').innerText = 'Update Sponsor';
+        lucide.createIcons();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        document.getElementById('sponsor-form').reset();
+        document.getElementById('sponsor-id').value = '';
+        document.getElementById('form-title').innerHTML = `<i data-lucide="award" class="w-4 h-4 inline"></i> Register Sponsor`;
+        document.getElementById('submit-btn').innerText = 'Register Sponsor';
+        lucide.createIcons();
+    }
+
+    async function deleteSponsor(id) {
+        if (confirm("Are you sure you want to remove this sponsor?")) {
+            try {
+                await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+                fetchSponsors();
+            } catch (e) {
+                alert('Error deleting sponsor.');
+            }
+        }
+    }
+
+    window.onload = () => {
+        setTheme(localStorage.getItem('preferred-theme') || 'theme-light');
+        fetchSponsors();
+    };
+</script>
+</body>
+</html>
